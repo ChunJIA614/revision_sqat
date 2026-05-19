@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMSE2103 – Software Quality Assurance & Testing</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --google-blue: #1a73e8;
+    --google-red: #ea4335;
+    --google-yellow: #fbbc04;
+    --google-green: #34a853;
+    --surface: #ffffff;
+    --surface-2: #f8f9fa;
+    --surface-3: #f1f3f4;
+    --border: #dadce0;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --text-tertiary: #80868b;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Roboto', sans-serif; background: var(--surface-2); color: var(--text-primary); }
+  h1, h2, h3 { font-family: 'Google Sans', sans-serif; }
+  code { font-family: 'Roboto Mono', monospace; }
+
+  /* Sidebar */
+  #sidebar { transition: transform 0.3s ease; }
+  @media (max-width: 1023px) {
+    #sidebar { transform: translateX(-100%); position: fixed; z-index: 100; top: 64px; height: calc(100vh - 64px); }
+    #sidebar.open { transform: translateX(0); }
+  }
+
+  /* Section cards */
+  .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; transition: box-shadow 0.2s ease; }
+  .section-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08); }
+
+  /* Chip badges */
+  .chip { display: inline-flex; align-items: center; border-radius: 16px; padding: 2px 10px; font-size: 11px; font-weight: 500; letter-spacing: 0.3px; }
+  .chip-blue { background: #e8f0fe; color: #1a73e8; }
+  .chip-green { background: #e6f4ea; color: #137333; }
+  .chip-yellow { background: #fef7e0; color: #b06000; }
+  .chip-red { background: #fce8e6; color: #c5221f; }
+  .chip-purple { background: #f3e8fd; color: #7b1fa2; }
+  .chip-teal { background: #e6f4f1; color: #137068; }
+
+  /* Nav active */
+  .nav-link { transition: background 0.15s; border-radius: 0 24px 24px 0; }
+  .nav-link:hover { background: var(--surface-3); }
+  .nav-link.active { background: #e8f0fe; color: #1a73e8; font-weight: 500; }
+
+  /* Table styles */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compare-table th { background: var(--surface-3); padding: 10px 14px; text-align: left; font-weight: 500; border: 1px solid var(--border); color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .compare-table td { padding: 10px 14px; border: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .compare-table tr:hover td { background: var(--surface-2); }
+
+  /* Formula box */
+  .formula-box { background: #f8f9fa; border-left: 3px solid #1a73e8; padding: 10px 14px; border-radius: 0 4px 4px 0; font-family: 'Roboto Mono', monospace; font-size: 13px; }
+
+  /* Mnemonic pill */
+  .mnemonic { background: linear-gradient(135deg, #e8f0fe 0%, #fce8e6 100%); border: 1px solid #c5cae9; border-radius: 20px; padding: 6px 16px; display: inline-block; font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #1a237e; }
+
+  /* Principle card */
+  .principle-card { border-left: 3px solid; border-radius: 0 6px 6px 0; padding: 10px 14px; background: var(--surface-2); margin-bottom: 8px; }
+
+  /* Scroll-to-top */
+  #scrollTop { position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: var(--google-blue); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(26,115,232,0.4); opacity: 0; transition: opacity 0.3s; z-index: 200; }
+  #scrollTop.visible { opacity: 1; }
+
+  /* Progress indicator */
+  #progress-bar { position: fixed; top: 64px; left: 0; height: 3px; background: linear-gradient(90deg, #1a73e8, #34a853); width: 0%; transition: width 0.1s; z-index: 90; }
+
+  /* Search highlight */
+  .highlight { background: #fff176; border-radius: 2px; }
+
+  /* Mobile hamburger */
+  #menuBtn { display: none; }
+  @media (max-width: 1023px) { #menuBtn { display: flex; } }
+
+  /* Smooth scroll */
+  html { scroll-behavior: smooth; }
+
+  /* CMM level colors */
+  .cmm-1 { border-color: #ea4335; }
+  .cmm-2 { border-color: #fbbc04; }
+  .cmm-3 { border-color: #34a853; }
+  .cmm-4 { border-color: #1a73e8; }
+  .cmm-5 { border-color: #9334e6; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAVBAR -->
+<header class="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 h-16 flex items-center px-4 gap-4" style="border-color:var(--border)">
+  <button id="menuBtn" class="items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 lg:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <!-- Google logo area -->
+  <div class="flex items-center gap-2 mr-4">
+    <div class="flex gap-1 items-center">
+      <span class="text-xl font-bold" style="color:#4285f4">B</span>
+      <span class="text-xl font-bold" style="color:#ea4335">M</span>
+      <span class="text-xl font-bold" style="color:#fbbc05">S</span>
+      <span class="text-xl font-bold" style="color:#4285f4">E</span>
+      <span class="text-xl font-bold" style="color:#34a853">2</span>
+      <span class="text-xl font-bold" style="color:#ea4335">1</span>
+      <span class="text-xl font-bold" style="color:#4285f4">0</span>
+      <span class="text-xl font-bold" style="color:#fbbc05">3</span>
+    </div>
+  </div>
+  <!-- Search bar -->
+  <div class="flex-1 max-w-2xl">
+    <div class="relative">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+      <input id="searchInput" type="text" placeholder="Search notes…" class="w-full pl-10 pr-4 py-2 rounded-full border text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400" style="border-color:var(--border); background:var(--surface-2)">
+    </div>
+  </div>
+  <div class="ml-auto flex items-center gap-2">
+    <span class="chip chip-blue hidden sm:inline-flex">SQA & Testing</span>
+    <span class="text-xs text-gray-400 hidden sm:block">Final Notes</span>
+  </div>
+</header>
+
+<div id="progress-bar"></div>
+
+<!-- LAYOUT -->
+<div class="flex pt-16 min-h-screen">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-64 bg-white border-r flex-shrink-0 overflow-y-auto" style="border-color:var(--border); height:calc(100vh - 64px); position:sticky; top:64px;">
+    <nav class="py-3 pr-2">
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 text-gray-400">Chapter 1</p>
+      <a href="#principles" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></span>7 Principles
+      </a>
+      <a href="#error-defect" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-red-400 flex-shrink-0"></span>Error / Defect / Failure
+      </a>
+      <a href="#stlc" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span>STLC Phases
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 2</p>
+      <a href="#unit-integration" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0"></span>Unit vs Integration Testing
+      </a>
+      <a href="#stubs-drivers" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0"></span>Stubs & Drivers
+      </a>
+      <a href="#higher-order" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-pink-400 flex-shrink-0"></span>Higher-Order Testing
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 4 & 5</p>
+      <a href="#bb-wb" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></span>Black & White Box
+      </a>
+      <a href="#pos-neg" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0"></span>Positive & Negative
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 6</p>
+      <a href="#test-bed" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-cyan-500 flex-shrink-0"></span>Test Bed & Deliverables
+      </a>
+      <a href="#bug-class" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>Bug Classifications
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 7</p>
+      <a href="#test-data" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>Test Data Generation
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 9</p>
+      <a href="#sqa-sqc" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>SQA vs SQC
+      </a>
+      <a href="#sqa-components" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0"></span>SQA Components
+      </a>
+      <a href="#sqa-activities" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-fuchsia-500 flex-shrink-0"></span>SQA Activities
+      </a>
+      <a href="#defect-mgmt" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"></span>Defect Management
+      </a>
+      <a href="#test-reports" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></span>Test Reports
+      </a>
+      <a href="#mccall" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-lime-500 flex-shrink-0"></span>McCall's Quality Factors
+      </a>
+      <a href="#maintenance" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-sky-500 flex-shrink-0"></span>Maintenance
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 10</p>
+      <a href="#sqc-overview" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0"></span>SQC Overview
+      </a>
+      <a href="#metrics" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-green-600 flex-shrink-0"></span>Quality Metrics
+      </a>
+      <a href="#standards" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0"></span>QM vs PP Standards
+      </a>
+      <a href="#sqa-benefits" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-teal-600 flex-shrink-0"></span>Benefits of SQA Standards
+      </a>
+
+      <p class="text-xs font-medium uppercase tracking-wider px-4 py-2 mt-2 text-gray-400">Chapter 11</p>
+      <a href="#tqm" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0"></span>TQM Principles
+      </a>
+      <a href="#cmm-cmmi" class="nav-link flex items-center gap-2 px-4 py-2 text-sm">
+        <span class="w-2 h-2 rounded-full bg-indigo-600 flex-shrink-0"></span>CMM & CMMI
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main id="main-content" class="flex-1 px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
+
+    <!-- HERO -->
+    <div class="section-card p-6 mb-6">
+      <div class="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl font-bold mb-1" style="color:var(--text-primary)">Software Quality Assurance &amp; Testing</h1>
+          <p class="text-sm" style="color:var(--text-secondary)">BMSE2103 — Complete Summary Notes</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="chip chip-blue">Chapter 1–2</span>
+            <span class="chip chip-green">Chapter 4–7</span>
+            <span class="chip chip-yellow">Chapter 9–10</span>
+            <span class="chip chip-purple">Chapter 11</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-3xl font-bold" style="color:#1a73e8">11</div>
+          <div class="text-xs text-gray-400">Topics</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CH1: 7 PRINCIPLES ─────────────────────────────────────────── -->
+    <section id="principles" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#1a73e8">1</div>
+        <h2 class="text-lg font-semibold">7 Principles of Software Testing</h2>
+        <span class="chip chip-blue ml-auto">Ch.1</span>
+      </div>
+      <div class="mb-4"><span class="mnemonic">PEED PCN</span></div>
+      <p class="text-xs text-gray-500 mb-4">⚠️ For scenario-based questions, only explain principles directly relevant to the scenario.</p>
+
+      <div class="principle-card" style="border-color:#1a73e8">
+        <p class="font-medium text-sm">P — Testing shows the <em>Presence</em> of defects, not their absence</p>
+        <p class="text-xs text-gray-500 mt-1">Testing can show the product fails but cannot prove 100% defect-free. It only reduces the probability of hidden defects remaining.</p>
+      </div>
+      <div class="principle-card" style="border-color:#ea4335">
+        <p class="font-medium text-sm">E — <em>Exhaustive</em> testing is impossible</p>
+        <p class="text-xs text-gray-500 mt-1">Testing all combinations of inputs and preconditions is not feasible. Testers must use risk assessment and priorities to control test efforts.</p>
+      </div>
+      <div class="principle-card" style="border-color:#fbbc04">
+        <p class="font-medium text-sm">E — Testing activities should start as <em>Early</em> as possible</p>
+        <p class="text-xs text-gray-500 mt-1">Early testing detects defects sooner, reducing the cost and time required to fix them later in the lifecycle.</p>
+      </div>
+      <div class="principle-card" style="border-color:#34a853">
+        <p class="font-medium text-sm">D — <em>Defect clustering</em></p>
+        <p class="text-xs text-gray-500 mt-1">Defects are not evenly distributed — they cluster together. A small number of modules usually contain most defects. If many defects are found in one area, there are usually more in that area.</p>
+      </div>
+      <div class="principle-card" style="border-color:#9334e6">
+        <p class="font-medium text-sm">P — The <em>Pesticide</em> paradox</p>
+        <p class="text-xs text-gray-500 mt-1">The same test cases repeated over and over will eventually stop finding new bugs. Test cases must be regularly reviewed and modified/updated.</p>
+      </div>
+      <div class="principle-card" style="border-color:#e8710a">
+        <p class="font-medium text-sm">C — Testing is <em>Context</em>-dependent</p>
+        <p class="text-xs text-gray-500 mt-1">No two systems should be tested in the exact same way. Testing must be adapted to the risks and environment of the application (e.g., safety-critical vs e-commerce).</p>
+      </div>
+      <div class="principle-card" style="border-color:#137068">
+        <p class="font-medium text-sm">N — <em>No failures</em> means the system is useful is a fallacy</p>
+        <p class="text-xs text-gray-500 mt-1">Finding failures and repairing defects does not guarantee the system meets users' expectations and needs.</p>
+      </div>
+    </section>
+
+    <!-- ERROR / DEFECT / FAILURE -->
+    <section id="error-defect" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#ea4335">!</div>
+        <h2 class="text-lg font-semibold">Software Error → Defect → Failure</h2>
+        <span class="chip chip-red ml-auto">Ch.1</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-lg p-4 border" style="border-color:#fbbc04; background:#fef7e0">
+          <p class="font-semibold text-sm mb-1" style="color:#b06000">1. Software Error</p>
+          <ul class="text-xs space-y-1" style="color:#5f6368">
+            <li>• A human mistake made by a person</li>
+            <li>• Logical mistake in code</li>
+            <li>• Anyone in the team can make mistakes during different phases of development</li>
+          </ul>
+        </div>
+        <div class="rounded-lg p-4 border" style="border-color:#ea4335; background:#fce8e6">
+          <p class="font-semibold text-sm mb-1" style="color:#c5221f">2. Software Defect (Bug)</p>
+          <ul class="text-xs space-y-1" style="color:#5f6368">
+            <li>• Difference between expected and actual results found by a tester</li>
+            <li>• Reflects inability or inefficiency to comply with specified requirements</li>
+          </ul>
+        </div>
+        <div class="rounded-lg p-4 border" style="border-color:#1a73e8; background:#e8f0fe">
+          <p class="font-semibold text-sm mb-1" style="color:#1a73e8">3. Software Failure</p>
+          <ul class="text-xs space-y-1" style="color:#5f6368">
+            <li>• Observable incorrect behaviour of the system when run in real environment</li>
+            <li>• Occurs when the software fails to perform in the real environment</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-3 flex items-center gap-2 justify-center text-sm font-medium" style="color:var(--text-secondary)">
+        <span class="chip chip-yellow">Error</span>
+        <span>→</span>
+        <span class="chip chip-red">Defect</span>
+        <span>→</span>
+        <span class="chip chip-blue">Failure</span>
+      </div>
+    </section>
+
+    <!-- STLC -->
+    <section id="stlc" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#34a853">S</div>
+        <h2 class="text-lg font-semibold">Software Testing Life Cycle (STLC)</h2>
+        <span class="chip chip-green ml-auto">Ch.1</span>
+      </div>
+      <div class="mb-3"><span class="mnemonic">RPD SEC</span></div>
+      <p class="text-xs text-gray-500 mb-4">A planned and systematic approach of testing software to ensure its quality, functionality, and security.</p>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#4285f4">
+          <p class="text-xs font-bold text-blue-600 mb-1">1. Requirement Analysis</p>
+          <p class="text-xs text-gray-500">Analyze project requirements for testing. Includes formal Team Review.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#ea4335">
+          <p class="text-xs font-bold text-red-600 mb-1">2. Test Planning</p>
+          <p class="text-xs text-gray-500">Creating a strategy for testing / test plan.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#fbbc04">
+          <p class="text-xs font-bold text-yellow-700 mb-1">3. Test Case Development</p>
+          <p class="text-xs text-gray-500">Design test cases based on requirements.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#34a853">
+          <p class="text-xs font-bold text-green-700 mb-1">4. Test Environment Setup</p>
+          <p class="text-xs text-gray-500">Involves Test Data Generation. Configure hardware, software, network and test bed for testing.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#9334e6">
+          <p class="text-xs font-bold text-purple-700 mb-1">5. Test Execution</p>
+          <p class="text-xs text-gray-500">Running test cases to find defects. Involves Test Monitoring &amp; Control via Test Logs.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#e8710a">
+          <p class="text-xs font-bold text-orange-700 mb-1">6. Test Cycle Closure</p>
+          <p class="text-xs text-gray-500">Final analysis and documentation. Generate Test Summary Report.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH2: UNIT vs INTEGRATION -->
+    <section id="unit-integration" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#fbbc04; color:#202124">2</div>
+        <h2 class="text-lg font-semibold">Unit Testing vs Integration Testing</h2>
+        <span class="chip chip-yellow ml-auto">Ch.2</span>
+      </div>
+      <table class="compare-table mb-4">
+        <thead>
+          <tr><th>Aspect</th><th>Unit Testing</th><th>Integration Testing</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="font-medium text-xs">What it tests</td><td>Individual sub-programs, classes or modules</td><td>Combination of modules; exposes defects in interactions and interfaces</td></tr>
+          <tr><td class="font-medium text-xs">Testing type</td><td>Mostly white-box testing</td><td>Black-box or white-box</td></tr>
+          <tr><td class="font-medium text-xs">Phase</td><td>During coding phase</td><td>After unit testing</td></tr>
+        </tbody>
+      </table>
+      <div class="mt-3">
+        <p class="text-sm font-medium mb-2">Incremental Integration — Advantages</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div class="rounded p-3" style="background:#e6f4ea">
+            <p class="text-xs font-semibold text-green-800">1. Earlier Error Detection</p>
+            <p class="text-xs text-gray-600 mt-1">Interface mismatches and incorrect assumptions are caught sooner.</p>
+          </div>
+          <div class="rounded p-3" style="background:#e8f0fe">
+            <p class="text-xs font-semibold text-blue-800">2. Easier Debugging</p>
+            <p class="text-xs text-gray-600 mt-1">Issues are easier to isolate because they are typically found in the most recently added module.</p>
+          </div>
+          <div class="rounded p-3" style="background:#fef7e0">
+            <p class="text-xs font-semibold text-yellow-800">3. More Thorough Testing</p>
+            <p class="text-xs text-gray-600 mt-1">Modules receive more exposure as they are exercised repeatedly as new modules are added.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUBS & DRIVERS -->
+    <section id="stubs-drivers" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#e8710a">S</div>
+        <h2 class="text-lg font-semibold">Stubs vs Drivers</h2>
+        <span class="chip chip-yellow ml-auto">Ch.2</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-lg p-4 border" style="border-color:#34a853; background:#e6f4ea">
+          <p class="font-semibold text-sm text-green-800 mb-2">Stub</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>• Dummy section of code used in <strong>Top-Down testing</strong></li>
+            <li>• Simulates a sub-module that hasn't been developed yet</li>
+            <li>• Replaces a called/lower-level module</li>
+          </ul>
+        </div>
+        <div class="rounded-lg p-4 border" style="border-color:#1a73e8; background:#e8f0fe">
+          <p class="font-semibold text-sm text-blue-800 mb-2">Driver</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>• Dummy program used in <strong>Bottom-Up testing</strong></li>
+            <li>• Simulates the main / calling module</li>
+            <li>• Triggers the module under test</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- HIGHER ORDER TESTING -->
+    <section id="higher-order" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#ec407a">H</div>
+        <h2 class="text-lg font-semibold">Higher-Order Testing (System Testing)</h2>
+        <span class="chip chip-red ml-auto">Ch.2</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#ec407a">
+          <p class="text-xs font-bold mb-1" style="color:#ec407a">1. Recovery Testing</p>
+          <p class="text-xs text-gray-500">How fast and how well a software application can recover after experiencing a crash, hardware failure, or other catastrophic events.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#ab47bc">
+          <p class="text-xs font-bold mb-1" style="color:#ab47bc">2. Serviceability Testing</p>
+          <p class="text-xs text-gray-500">Maintenance Testing. The application correctly provides mechanisms to yield data or service aids when technical support is required.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#7e57c2">
+          <p class="text-xs font-bold mb-1" style="color:#7e57c2">3. Critical Path Testing</p>
+          <p class="text-xs text-gray-500">Identifying and defining critical path. Ensure critical business processes are functional.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH4/5: BLACK BOX vs WHITE BOX -->
+    <section id="bb-wb" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#5c6bc0">4</div>
+        <h2 class="text-lg font-semibold">White-Box vs Black-Box Testing</h2>
+        <span class="chip chip-purple ml-auto">Ch.4&5</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="compare-table mb-4">
+          <thead>
+            <tr><th>Feature / Aspect</th><th>⬛ Black Box Testing</th><th>⬜ White Box Testing</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-medium text-xs">Also known as</td><td>Functional, behavioral, opaque-box, closed-box testing, performance testing</td><td>Structural, clear-box, glass-box, code-based testing</td></tr>
+            <tr><td class="font-medium text-xs">Focus</td><td>Functionality / external behavior — treats system as an opaque box</td><td>Internal structure, logic, and flow of code — treats system as a transparent box</td></tr>
+            <tr><td class="font-medium text-xs">Knowledge required</td><td>No programming knowledge needed; only requirements, specifications, and expected outputs</td><td>Strong programming skills + full access to source code</td></tr>
+            <tr><td class="font-medium text-xs">Test case derivation</td><td>Derived strictly from system requirements and specifications</td><td>Derived directly from source code, architecture, and design documents</td></tr>
+            <tr><td class="font-medium text-xs">Objective</td><td>Ensure software performs its intended functions correctly and meets user expectations</td><td>Ensure all internal operations perform according to spec and all code paths are executed</td></tr>
+            <tr><td class="font-medium text-xs">Primary performers</td><td>Independent Software Testers, QA Analysts, End-Users</td><td>Software Developers and specialized Technical Testers</td></tr>
+            <tr><td class="font-medium text-xs">Common testing levels</td><td>System Testing and Acceptance Testing</td><td>Unit Testing and Integration Testing</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-sm font-medium mt-3 mb-2">Types of Dynamic Black-Box Testing</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#5c6bc0">
+          <p class="text-xs font-bold" style="color:#5c6bc0">Functional Testing</p>
+          <p class="text-xs text-gray-500 mt-1">Testing the system against its functional requirements. Check output.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#e53935">
+          <p class="text-xs font-bold" style="color:#e53935">Stress Testing</p>
+          <p class="text-xs text-gray-500 mt-1">Testing software beyond normal operational capacity. Determine robustness, error-handling of the system.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#00897b">
+          <p class="text-xs font-bold" style="color:#00897b">Usability Testing</p>
+          <p class="text-xs text-gray-500 mt-1">How easily user interfaces can be used. Involves real users testing flow, layout.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- POSITIVE vs NEGATIVE -->
+    <section id="pos-neg" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#00897b">±</div>
+        <h2 class="text-lg font-semibold">Positive Testing vs Negative Testing</h2>
+        <span class="chip chip-teal ml-auto">Ch.4&5</span>
+      </div>
+      <table class="compare-table">
+        <thead>
+          <tr><th>Aspect</th><th>✅ Positive Testing</th><th>❌ Negative Testing</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="font-medium text-xs">Definition</td><td>Performed by assuming everything will be as expected</td><td>Performed to check the system for unexpected conditions</td></tr>
+          <tr><td class="font-medium text-xs">Data used</td><td>Only valid and relevant data; all functionalities assumed to be as expected</td><td>Checks what happens when unexpected conditions are given to the software</td></tr>
+          <tr><td class="font-medium text-xs">Importance</td><td>Less important — only ensures functions work as expected</td><td>Very important in high-performance software development</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- CH6: TEST BED & DELIVERABLES -->
+    <section id="test-bed" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#0097a7">6</div>
+        <h2 class="text-lg font-semibold">Test Bed &amp; Test Deliverables</h2>
+        <span class="chip chip-teal ml-auto">Ch.6</span>
+      </div>
+      <div class="mb-4">
+        <p class="text-sm font-medium mb-2">Test Bed (Test Environment)</p>
+        <ul class="text-xs text-gray-600 space-y-1 ml-3">
+          <li>• Mirror the production environment</li>
+          <li>• Budget Limit — often use simulators, emulators and traffic generators</li>
+          <li>• Collect Stakeholder Requirements</li>
+          <li>• Use Centralized Way to manage test data / environments</li>
+          <li>• Identify which data can be shared and exclusive during multiple cycles</li>
+        </ul>
+      </div>
+      <table class="compare-table mb-4">
+        <thead>
+          <tr><th>Aspect</th><th>Test Environment (Test Bed)</th><th>Test Data</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="font-medium text-xs">Definition</td><td>Physical/virtual setup including hardware (servers, desktops), software (OS, browsers), and network configurations required to run tests</td><td>The input values and files fed into the system</td></tr>
+          <tr><td class="font-medium text-xs">Preparation</td><td>Setting up servers, installing OS/databases, and configuring networks</td><td>Creating valid, invalid, and boundary input sets</td></tr>
+          <tr><td class="font-medium text-xs">Importance</td><td>Ensures results are representative of the production environment</td><td>Necessary to exercise specific features and find logical defects</td></tr>
+        </tbody>
+      </table>
+      <p class="text-sm font-medium mb-2">Test Deliverables</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#1a73e8">
+          <p class="text-xs font-bold text-blue-700">Before Testing</p>
+          <p class="text-xs text-gray-600 mt-1"><strong>Test Plan</strong> — Strategy and schedule</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#fbbc04">
+          <p class="text-xs font-bold text-yellow-700">During Testing</p>
+          <p class="text-xs text-gray-600 mt-1"><strong>Test Case Specifications / Test Logs</strong> — Logs of observed defects</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#34a853">
+          <p class="text-xs font-bold text-green-700">After Testing</p>
+          <p class="text-xs text-gray-600 mt-1"><strong>Test Summary Report</strong> — Summarizes final results and lessons learned</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUG CLASSIFICATIONS -->
+    <section id="bug-class" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#e53935">B</div>
+        <h2 class="text-lg font-semibold">Bug Classifications</h2>
+        <span class="chip chip-red ml-auto">Ch.6</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="rounded-lg p-3 border" style="border-color:#ea4335; background:#fce8e6">
+          <p class="font-semibold text-xs text-red-700 mb-1">1. Requirements Failure</p>
+          <p class="text-xs text-gray-600">The system functions, but it does not behave according to the client's documented business rules or specifications.</p>
+        </div>
+        <div class="rounded-lg p-3 border" style="border-color:#fbbc04; background:#fef7e0">
+          <p class="font-semibold text-xs text-yellow-700 mb-1">2. Non-Requirements Failure</p>
+          <p class="text-xs text-gray-600">Technical defects, coding errors, or design flaws that violate standard software behavior, even if not explicitly written in the business requirements (e.g., crashes, UI glitches).</p>
+        </div>
+        <div class="rounded-lg p-3 border" style="border-color:#1a73e8; background:#e8f0fe">
+          <p class="font-semibold text-xs text-blue-700 mb-1">3. External Failure</p>
+          <p class="text-xs text-gray-600">Failures caused by interactions with third-party software, external hardware, or external APIs outside the direct control of the system.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH7: TEST DATA GENERATION -->
+    <section id="test-data" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#2e7d32">7</div>
+        <h2 class="text-lg font-semibold">Test Data Generation</h2>
+        <span class="chip chip-green ml-auto">Ch.7</span>
+      </div>
+      <div class="mb-3"><span class="mnemonic">ASC SAR</span></div>
+      <p class="text-xs text-gray-500 mb-3">The process of creating data (random or structured) to test the software. Use a mix of valid, invalid, boundary and security data.</p>
+      <div class="overflow-x-auto">
+        <table class="compare-table">
+          <thead>
+            <tr><th>Step</th><th>Description</th><th>Simple Explanation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="chip chip-blue">1. Analysis of Data</span></td><td>Study what types of data are needed, including valid, invalid, and edge cases</td><td>Understand what data you need</td></tr>
+            <tr><td><span class="chip chip-green">2. Data Setup</span></td><td>Prepare data similar to real users and production environment; adjust based on actual usage</td><td>Make test data look like real-world data</td></tr>
+            <tr><td><span class="chip chip-yellow">3. Test Data Clean Up</span></td><td>Decide which data to keep or remove after testing to avoid clutter</td><td>Clean and manage data properly</td></tr>
+            <tr><td><span class="chip chip-red">4. Protect Sensitive Data</span></td><td>Identify and protect sensitive/private data (e.g., personal information) — mask it</td><td>Keep data safe and secure</td></tr>
+            <tr><td><span class="chip chip-purple">5. Automation</span></td><td>Use tools to automatically generate test data and compare with manual data</td><td>Use automation to save time and effort</td></tr>
+            <tr><td><span class="chip chip-teal">6. Data Refresh (Central Repository)</span></td><td>Store and manage data in a central place for reuse and future testing</td><td>Keep data organized and reusable</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CH9: SQA vs SQC -->
+    <section id="sqa-sqc" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#1a73e8">9</div>
+        <h2 class="text-lg font-semibold">SQA vs SQC</h2>
+        <span class="chip chip-blue ml-auto">Ch.9</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="compare-table">
+          <thead>
+            <tr><th>Feature / Aspect</th><th>🔵 Software Quality Assurance (SQA)</th><th>🟢 Software Quality Control (SQC)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-medium text-xs">Primary Focus</td><td>Focuses on the <strong>Process</strong> (how you build the software)</td><td>Focuses on the <strong>Product</strong> (the software itself)</td></tr>
+            <tr><td class="font-medium text-xs">Main Objective</td><td>To <strong>Prevent</strong> problems and defects from occurring</td><td>To <strong>Find and fix</strong> mistakes or defects</td></tr>
+            <tr><td class="font-medium text-xs">Description</td><td>Making sure you do things the right way to avoid mistakes throughout development. A process focusing on policies, procedures and process management</td><td>Checking the built software to ensure it meets requirements and finding errors. A process designed to test, inspect and ensure quality of the product itself</td></tr>
+            <tr><td class="font-medium text-xs">Approach</td><td><strong>Proactive:</strong> Establishing standards, processes, and methodologies early on</td><td><strong>Reactive:</strong> Executing tests to identify bugs after or during the build phase</td></tr>
+            <tr><td class="font-medium text-xs">Scope</td><td>Covers the entire Software Development Life Cycle (SDLC)</td><td>Generally a specific part of the testing phase within the SDLC</td></tr>
+            <tr><td class="font-medium text-xs">Orientation</td><td>Management and process-oriented (e.g., audits, reviews, documentation)</td><td>Execution and product-oriented (e.g., black-box testing, white-box testing)</td></tr>
+            <tr><td class="font-medium text-xs">Program execution</td><td>QA does NOT involve executing the program — all project team members are responsible</td><td>QC DOES involve executing the program — testing team members are responsible</td></tr>
+            <tr><td class="font-medium text-xs">Example</td><td>Verification (Make sure doing the right things)</td><td>Validation (Makes sure the result is right)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SQA COMPONENTS -->
+    <section id="sqa-components" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#7c4dff">6</div>
+        <h2 class="text-lg font-semibold">6 Main Components of the SQA System</h2>
+        <span class="chip chip-purple ml-auto">Ch.9</span>
+      </div>
+      <p class="text-xs text-gray-500 mb-4">An SQA system is an entire organizational framework — not just testing. It comprises six classes of components.</p>
+      <div class="space-y-3">
+        <div class="rounded-lg border p-4" style="border-color:#1a73e8">
+          <p class="font-semibold text-sm text-blue-700 mb-1">A. Pre-Project Components</p>
+          <p class="text-xs text-gray-600 mb-2">Taken before actual development begins. Ensures project commitments, resources, schedules, and budgets are adequately defined.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="chip chip-blue">Contract Review</span>
+            <span class="chip chip-blue">Development & Quality Plans</span>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#34a853">
+          <p class="font-semibold text-sm text-green-700 mb-1">B. Software Project Life Cycle Components</p>
+          <p class="text-xs text-gray-600 mb-2">Core quality tasks during actual development phases (design, coding, testing) and operation-maintenance stage.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="chip chip-green">Reviews (FDR, Peer Reviews)</span>
+            <span class="chip chip-green">Expert Opinions</span>
+            <span class="chip chip-green">Software Testing (Black/White Box)</span>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#fbbc04">
+          <p class="font-semibold text-sm text-yellow-700 mb-1">C. Infrastructure Components (Error Prevention &amp; Improvement)</p>
+          <p class="text-xs text-gray-600 mb-2">Foundational tools and guidelines used globally to prevent faults and improve productivity.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="chip chip-yellow">Procedures & Work Instructions</span>
+            <span class="chip chip-yellow">Templates & Checklists</span>
+            <span class="chip chip-yellow">Staff Training & Certification</span>
+            <span class="chip chip-yellow">Preventive & Corrective Actions</span>
+            <span class="chip chip-yellow">Configuration Management</span>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#ea4335">
+          <p class="font-semibold text-sm text-red-700 mb-1">D. Management SQA Components</p>
+          <p class="text-xs text-gray-600 mb-2">Supports managerial control to prevent schedule and budget failures.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="chip chip-red">Project Progress Control</span>
+            <span class="chip chip-red">Software Quality Metrics</span>
+            <span class="chip chip-red">Software Quality Costs</span>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#9334e6">
+          <p class="font-semibold text-sm text-purple-700 mb-1">E. SQA Standards, System Certification &amp; Assessment Components</p>
+          <p class="text-xs text-gray-600 mb-2">Ensures the organization's processes align with the rest of the industry and international standards.</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="chip chip-purple">ISO 9000-3</span>
+            <span class="chip chip-purple">IEEE Standards</span>
+            <span class="chip chip-purple">CMM / CMMI</span>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#0097a7">
+          <p class="font-semibold text-sm text-teal-700 mb-1">F. Human Components (Organizational Base)</p>
+          <p class="text-xs text-gray-600 mb-2">The actual people who make up the organizational base of SQA. Includes managers, testing personnel, SQA Unit, and SQA practitioners.</p>
+          <ul class="text-xs text-gray-600 ml-3 space-y-1">
+            <li>• Develop and support implementation of SQA components</li>
+            <li>• Actively detect deviations from SQA procedures and methodologies</li>
+            <li>• Constantly suggest improvements to the SQA system</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg" style="background:#f8f9fa; border:1px solid var(--border)">
+        <p class="text-xs font-semibold mb-2">Factors that decide the SQA System used:</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-gray-600">
+          <div><strong class="text-blue-700">Organizational:</strong> Size of organization, range of products, type of software clientele</div>
+          <div><strong class="text-green-700">Project &amp; Maintenance:</strong> Level of complexity, staff experience, extent of code reuse</div>
+          <div><strong class="text-yellow-700">Professional Staff:</strong> Professional qualifications, training levels, teamwork history</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SQA ACTIVITIES -->
+    <section id="sqa-activities" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#d81b60">A</div>
+        <h2 class="text-lg font-semibold">SQA Activities</h2>
+        <span class="chip chip-red ml-auto">Ch.9</span>
+      </div>
+      <p class="text-sm font-medium mb-3">Part 1: Core SQA Activities in Testing <span class="chip chip-blue ml-2">PIE OER</span></p>
+      <div class="space-y-3 mb-4">
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#4285f4">
+          <p class="text-xs font-bold text-blue-700">1. Plan the Testing and SQA Processes</p>
+          <p class="text-xs text-gray-600 mt-1">Before any testing begins, establish a clear plan that dictates what will be tested, when, how, and by whom. Create quality management plan, test plan and test case.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#ea4335">
+          <p class="text-xs font-bold text-red-700">2. Implementation of Test-Oriented Management</p>
+          <p class="text-xs text-gray-600 mt-1">Adopt specific development methodologies to integrate quality from the start:</p>
+          <ul class="text-xs text-gray-600 ml-3 mt-1 space-y-1">
+            <li>• <strong>Extreme Programming (XP):</strong> Agile framework to improve software quality and responsiveness to changing requirements</li>
+            <li>• <strong>Test-Driven Development (TDD):</strong> "Test-First Approach" — test cases are written before any actual code implementation</li>
+            <li>• <strong>Pair Programming:</strong> Two developers work together at one workstation (one writes, one reviews each line) to produce higher-quality software</li>
+          </ul>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#fbbc04">
+          <p class="text-xs font-bold text-yellow-700">3. Ensure a Suitable Work Environment</p>
+          <p class="text-xs text-gray-600 mt-1">Provide the SQA and testing teams with proper tools, environments, and conditions. Involve dedicated SQA team from the beginning to start testing early.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#34a853">
+          <p class="text-xs font-bold text-green-700">4. Optimize the Use of Automated Tests</p>
+          <p class="text-xs text-gray-600 mt-1">Maximize test automation to increase efficiency, reduce manual repetitive tasks, and ensure consistent execution of regression tests.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#9334e6">
+          <p class="text-xs font-bold text-purple-700">5. Employ Code Quality Measurements</p>
+          <p class="text-xs text-gray-600 mt-1">Track measurable metrics: <strong>Rate of Delivery</strong>, <strong>Testability</strong>, <strong>Product Usability</strong>, <strong>Reliability</strong>, <strong>Security</strong>, <strong>Maintainability</strong>, <strong>Performance Efficiency</strong>.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#e8710a">
+          <p class="text-xs font-bold text-orange-700">6. Report Bugs Effectively</p>
+          <p class="text-xs text-gray-600 mt-1">A good bug report makes testing more efficient by clearly identifying the problem and navigating engineers toward a solution. A badly written report can lead to serious misunderstandings and wasted time.</p>
+        </div>
+      </div>
+      <p class="text-sm font-medium mb-2">Part 2: Broad SQA Practices</p>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div class="rounded p-2 text-xs bg-blue-50 text-blue-800 border border-blue-100"><strong>Reviews & Inspections</strong> — Reviewing requirements, test plans, test cases, source code</div>
+        <div class="rounded p-2 text-xs bg-green-50 text-green-800 border border-green-100"><strong>Test Process Monitoring</strong> — Monitoring all testing activities against defined plans</div>
+        <div class="rounded p-2 text-xs bg-yellow-50 text-yellow-800 border border-yellow-100"><strong>Quality Audits</strong> — Independent audits to verify compliance with quality standards</div>
+        <div class="rounded p-2 text-xs bg-red-50 text-red-800 border border-red-100"><strong>Defect Tracking & Management</strong> — Recording, prioritizing, tracking, and resolving defects</div>
+        <div class="rounded p-2 text-xs bg-purple-50 text-purple-800 border border-purple-100"><strong>Metrics & Reporting</strong> — Collecting and analyzing quantitative testing data</div>
+      </div>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="rounded-lg p-3 border" style="border-color:#34a853; background:#e6f4ea">
+          <p class="text-xs font-bold text-green-800 mb-2">✅ Benefits</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>• Ensures ultimate quality of both process and final product</li>
+            <li>• Standardizes procedures and formatting of artifacts across the organization</li>
+            <li>• Enhances traceability (ability to trace a defect back to its original requirement)</li>
+          </ul>
+        </div>
+        <div class="rounded-lg p-3 border" style="border-color:#ea4335; background:#fce8e6">
+          <p class="text-xs font-bold text-red-800 mb-2">⚠️ Challenges</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>• <strong>Resource Heavy:</strong> Requires more people, tools, and environments</li>
+            <li>• <strong>Requirement Issues:</strong> Unclear or changing requirements can derail SQA plans</li>
+            <li>• <strong>Time Constraints:</strong> Tight timelines make thorough SQA difficult</li>
+            <li>• <strong>Budget:</strong> Insufficient funds allocated to QA</li>
+            <li>• <strong>Human Factor:</strong> Resistance from developers or management to adapt to QA processes</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEFECT MANAGEMENT -->
+    <section id="defect-mgmt" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#c62828">D</div>
+        <h2 class="text-lg font-semibold">Defect Management</h2>
+        <span class="chip chip-red ml-auto">Ch.9</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-sm font-medium mb-2">Defect Reporting &amp; Meeting</p>
+          <ul class="text-xs text-gray-600 space-y-1 ml-3">
+            <li>• <strong>Defect Reporting:</strong> Written description of defects in software</li>
+            <li>• <strong>Defect Meeting:</strong> Best way to disseminate info among testers, analysts, and developers</li>
+            <li>• Meeting is conducted at end of every day</li>
+            <li>• Defects are categorized by <strong>type and severity</strong></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-sm font-medium mb-2">Defect Classification</p>
+          <ul class="text-xs text-gray-600 space-y-1 ml-3">
+            <li>• Helps test planning and <strong>prioritization</strong></li>
+            <li>• Classification may vary depending upon requirements of project</li>
+          </ul>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <div class="rounded-lg p-3 border-2 border-red-600" style="background:#fce8e6">
+          <p class="font-bold text-sm text-red-700">Showstopper (X)</p>
+          <ul class="text-xs text-red-900 mt-2 space-y-1">
+            <li>• Impact of the defect is <strong>severe</strong></li>
+            <li>• System cannot be tested without resolving; internal solution may not be available</li>
+            <li>• <strong>High Priority</strong></li>
+          </ul>
+        </div>
+        <div class="rounded-lg p-3 border-2 border-yellow-500" style="background:#fef7e0">
+          <p class="font-bold text-sm text-yellow-700">Critical (C)</p>
+          <ul class="text-xs text-yellow-900 mt-2 space-y-1">
+            <li>• Impact is <strong>severe, BUT</strong> an internal solution (workaround) is available</li>
+            <li>• <strong>Medium Priority</strong></li>
+          </ul>
+        </div>
+        <div class="rounded-lg p-3 border-2 border-green-500" style="background:#e6f4ea">
+          <p class="font-bold text-sm text-green-700">Non-Critical (N)</p>
+          <ul class="text-xs text-green-900 mt-2 space-y-1">
+            <li>• All defects not in X and C categories</li>
+            <li>• Can be solved via documentation or user training</li>
+            <li>• Minor issues — does not affect testing</li>
+            <li>• <strong>Low Priority</strong></li>
+          </ul>
+        </div>
+      </div>
+      <p class="text-sm font-medium mb-2">Defect Priority</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#c62828">
+          <p class="text-xs font-bold text-red-800">High Priority</p>
+          <p class="text-xs text-gray-600 mt-1">Further development or testing can't occur until defect is repaired.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#f9a825">
+          <p class="text-xs font-bold text-yellow-800">Medium Priority</p>
+          <p class="text-xs text-gray-600 mt-1">Defect needs to be solved as soon as possible; it is impairing development and testing.</p>
+        </div>
+        <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#2e7d32">
+          <p class="text-xs font-bold text-green-800">Low Priority</p>
+          <p class="text-xs text-gray-600 mt-1">Can be repaired after more serious defects are fixed.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEST REPORTS -->
+    <section id="test-reports" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#f57c00">T</div>
+        <h2 class="text-lg font-semibold">Test Reports (IEEE 829)</h2>
+        <span class="chip chip-yellow ml-auto">Ch.9</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="rounded-lg border p-4" style="border-color:#f57c00">
+          <p class="font-semibold text-sm text-orange-700 mb-2">Test Incident Report</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>• Written description of an <strong>incident</strong> (variation/deviation observed from expected system behavior) observed during testing</li>
+            <li>• An incident is basically any unexpected behavior or response from software that requires investigation (broader than just defect)</li>
+          </ul>
+          <div class="mt-2 text-xs font-medium text-gray-700">IEEE 829 Template includes:</div>
+          <ul class="text-xs text-gray-500 ml-2 mt-1 space-y-1">
+            <li>• Test incident report identifier</li>
+            <li>• Summary (references test procedure &amp; test logs)</li>
+            <li>• Incident description (inputs/expected, actual results, anomalies, procedure step)</li>
+            <li>• Impact (actual damage + severity/priority assessment)</li>
+          </ul>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#1a73e8">
+          <p class="font-semibold text-sm text-blue-700 mb-2">Test Summary Report</p>
+          <ul class="text-xs text-gray-600 space-y-1">
+            <li>• Created at a milestone or <strong>at the end of a test level</strong></li>
+            <li>• Describes the results of a given level or phase of testing</li>
+          </ul>
+          <div class="mt-2 text-xs font-medium text-gray-700">IEEE 829 Template includes:</div>
+          <ul class="text-xs text-gray-500 ml-2 mt-1 space-y-1">
+            <li>• Test summary report identifier</li>
+            <li>• Summary</li>
+            <li>• Variances</li>
+            <li>• Comprehensive assessment</li>
+            <li>• Summary of results</li>
+            <li>• Evaluations</li>
+            <li>• Summary of activities</li>
+            <li>• Approvals</li>
+          </ul>
+        </div>
+      </div>
+      <p class="text-sm font-medium mb-2">IEEE 829 Test Summary Report — Detailed Sections</p>
+      <div class="space-y-2">
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">1. Test Summary Report Identifier — Unique ID to identify this summary report and indicate the level of testing.</summary>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">2. Summary</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">Identify all relevant support materials so the reader knows which version and release is being reported on. Identify specific version of external packages. Includes: test items, environment, references.</div>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">3. Variances</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">Document any changes or deviations from agreed-upon areas in the reference documents. Include supporting documents for the deviation/change.</div>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">4. Comprehensive Assessment</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">Evaluation of testing and test process in terms of documented test objectives. Includes: evaluation of test coverage (total objectives, objectives covered/omitted), identification of uncovered attributes, surprising trends and test process changes.</div>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">5. Summary of Results</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">Report on overall status of incidents (good and bad). Includes: total incidents (by severity/priority, by cost/failure impact), defect patterns, open/unresolved incidents.</div>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">6. Evaluations</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">Objective assessment of failure likelihood and overall quality against criteria in the test plan. Includes: limitations (incomplete/dropped features), failure likelihood (high/medium risk areas, good quality areas).</div>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">7. Summary of Activities</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">Cover planned activities and changes. Includes: staff time used (hours/day/week), elapsed vs staff time, costs (planned vs actual), variances and reasons (scope changes, requirements changes, defect trends, loss of personnel, test environment issues).</div>
+        </details>
+        <details class="rounded border text-xs" style="border-color:var(--border)">
+          <summary class="p-3 cursor-pointer font-medium">8. Approvals</summary>
+          <div class="p-3 pt-0 text-gray-600 border-t" style="border-color:var(--border)">List and signature block for each approving authority. Must match the test plan.</div>
+        </details>
+      </div>
+    </section>
+
+    <!-- MCCALL'S QUALITY FACTORS -->
+    <section id="mccall" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#43a047">M</div>
+        <h2 class="text-lg font-semibold">McCall's Software Quality Factors</h2>
+        <span class="chip chip-green ml-auto">Ch.9</span>
+      </div>
+      <p class="text-xs text-gray-500 mb-4">McCall's Classic Quality Factors Model — 3 categories, 11 total factors.</p>
+      <div class="space-y-4">
+        <div class="rounded-lg border p-4" style="border-color:#1a73e8">
+          <p class="font-semibold text-sm text-blue-700 mb-3">1. Product Operation Factors <span class="font-normal text-gray-500">(Daily Use)</span></p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="text-xs p-2 rounded bg-blue-50">
+              <strong>Correctness:</strong> Does it do what I want? — Ensures software meets exact specifications and provides required outputs accurately.
+            </div>
+            <div class="text-xs p-2 rounded bg-blue-50">
+              <strong>Reliability:</strong> Does it do it accurately all the time? — Deals with failure rate and ability to provide uninterrupted service.
+            </div>
+            <div class="text-xs p-2 rounded bg-blue-50">
+              <strong>Efficiency:</strong> Will it run on my hardware as fast as it needs to? — Concerns hardware resources (processing power, memory, storage) needed to perform functions.
+            </div>
+            <div class="text-xs p-2 rounded bg-blue-50">
+              <strong>Integrity (Security):</strong> Is it secure? — Focuses on authorization, access levels, and protecting information against unauthorized access.
+            </div>
+            <div class="text-xs p-2 rounded bg-blue-50">
+              <strong>Usability:</strong> Can I run it easily? — Measures scope of staff resources needed to train a new employee and operate the system.
+            </div>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#34a853">
+          <p class="font-semibold text-sm text-green-700 mb-3">2. Product Revision Factors <span class="font-normal text-gray-500">(Fixing/Changing — Maintenance)</span></p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div class="text-xs p-2 rounded bg-green-50">
+              <strong>Maintainability:</strong> Can I fix it easily? — Effort to identify root causes of failures, correct errors, and verify corrections.
+            </div>
+            <div class="text-xs p-2 rounded bg-green-50">
+              <strong>Flexibility:</strong> Can I change it easily? — Capabilities and effort for adaptive and perfective maintenance (adding features, modifying for new business rules).
+            </div>
+            <div class="text-xs p-2 rounded bg-green-50">
+              <strong>Testability:</strong> Can I test it easily? — Includes special diagnostic features embedded in programs for automatic checks to find faults easily.
+            </div>
+          </div>
+        </div>
+        <div class="rounded-lg border p-4" style="border-color:#fbbc04">
+          <p class="font-semibold text-sm text-yellow-700 mb-3">3. Product Transition Factors <span class="font-normal text-gray-500">(Moving/Sharing)</span></p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div class="text-xs p-2 rounded bg-yellow-50">
+              <strong>Portability:</strong> Will I be able to use it on another machine? — Effort required to transfer from one hardware/software environment to another.
+            </div>
+            <div class="text-xs p-2 rounded bg-yellow-50">
+              <strong>Reusability:</strong> Will I be able to reuse some of the software? — Extent to which a program or modules can be reused in other applications.
+            </div>
+            <div class="text-xs p-2 rounded bg-yellow-50">
+              <strong>Interoperability:</strong> Will I be able to interface it with another system? — Effort required to couple one system with another (e.g., HR software with Accounting software).
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAINTENANCE -->
+    <section id="maintenance" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#0288d1">⚙</div>
+        <h2 class="text-lg font-semibold">Software Maintenance Types</h2>
+        <span class="chip chip-blue ml-auto">Ch.9</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#ea4335">
+          <p class="text-xs font-bold text-red-700">1. Corrective Maintenance</p>
+          <p class="text-xs text-gray-600 mt-1">The correction of software faults/failures.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#fbbc04">
+          <p class="text-xs font-bold text-yellow-700">2. Adaptive Maintenance</p>
+          <p class="text-xs text-gray-600 mt-1">Adapting the current software to additional circumstances and new customers without changing the core software itself. (e.g., moving to new OS)</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 bg-gray-50" style="border-color:#34a853">
+          <p class="text-xs font-bold text-green-700">3. Perfective Maintenance</p>
+          <p class="text-xs text-gray-600 mt-1">Enhancement and improvement of existing software with respect to locally limited issues. (Adding new features, improving functionality)</p>
+        </div>
+      </div>
+      <div class="mt-4 p-4 rounded-lg border" style="border-color:#0288d1; background:#e1f5fe">
+        <p class="text-sm font-semibold text-blue-800 mb-2">SQA Metrics — Maintenance Phase (McCall's Product Revision)</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div>
+            <p class="font-semibold text-blue-700">Maintainability Metrics:</p>
+            <ul class="text-gray-600 space-y-1 mt-1">
+              <li>• Time to Fix: How quickly can a bug be traced and resolved?</li>
+              <li>• Code Modularity: Does changing one module break another?</li>
+              <li>• Documentation Quality: Is code well-commented?</li>
+            </ul>
+          </div>
+          <div>
+            <p class="font-semibold text-blue-700">Flexibility Metrics:</p>
+            <ul class="text-gray-600 space-y-1 mt-1">
+              <li>• Man-hours to implement a change request without rewriting core architecture</li>
+            </ul>
+          </div>
+          <div>
+            <p class="font-semibold text-blue-700">Testability Metrics:</p>
+            <ul class="text-gray-600 space-y-1 mt-1">
+              <li>• Does the software include embedded diagnostic features for automatic checks?</li>
+              <li>• High testability = easier fault finding during maintenance</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH10: SQC OVERVIEW -->
+    <section id="sqc-overview" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#e65100">10</div>
+        <h2 class="text-lg font-semibold">Software Quality Control (SQC) Overview</h2>
+        <span class="chip chip-yellow ml-auto">Ch.10</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#e65100">
+            <p class="text-xs font-bold text-orange-800">Primary Objective</p>
+            <p class="text-xs text-gray-600 mt-1">Find problems and fix mistakes in the software. Ultimate objective is the <strong>withholding of any product that does not qualify</strong>. Uses process measurement and data analysis to guarantee quality.</p>
+          </div>
+          <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#fbbc04">
+            <p class="text-xs font-bold text-yellow-800">Timing of Execution</p>
+            <p class="text-xs text-gray-600 mt-1">SQC is a <strong>reactive measure</strong>. Inspections, testing, and QC activities take place as development is completed, but strictly <strong>before the product is shipped</strong> to the client.</p>
+          </div>
+          <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#1a73e8">
+            <p class="text-xs font-bold text-blue-800">Approach to Errors</p>
+            <p class="text-xs text-gray-600 mt-1">Unlike QA (which prevents causes of errors), SQC <strong>accepts the product is already built</strong> and focuses on detecting errors that slipped through. Involves hands-on execution and checking (dynamic testing, identifying bugs, reporting failures).</p>
+          </div>
+          <div class="rounded p-3 border-l-4 bg-gray-50" style="border-color:#34a853">
+            <p class="text-xs font-bold text-green-800">Relationship to QA</p>
+            <p class="text-xs text-gray-600 mt-1">Quality Control is actually a <strong>subset (part) of Quality Assurance</strong>. SQA provides the overall framework and standards; SQC executes the tests to ensure those standards were met.</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-medium mb-2">Product Metrics (Customer Service Performance)</p>
+          <div class="space-y-2">
+            <div class="rounded-lg p-3 border" style="border-color:#e65100; background:#fbe9e7">
+              <p class="font-semibold text-xs text-orange-800">Help Desk (HD) Services Metrics</p>
+              <ul class="text-xs text-gray-600 mt-1 space-y-1">
+                <li>• Measures support provided to users — instructing on usage and solving implementation problems</li>
+                <li>• Data Source: customer calls and support tickets</li>
+                <li>• High metric = poor Product Usability or poor user manuals (software too hard to use)</li>
+              </ul>
+            </div>
+            <div class="rounded-lg p-3 border" style="border-color:#c62828; background:#fce8e6">
+              <p class="font-semibold text-xs text-red-800">Corrective Maintenance Services Metrics</p>
+              <ul class="text-xs text-gray-600 mt-1 space-y-1">
+                <li>• Measures actual correction of software failures identified by customers or detected by service team</li>
+                <li>• Data Source: failure reports and bug tracking systems</li>
+                <li>• High metric = poor code quality, low reliability, inadequate testing during development</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUALITY METRICS (CH10) -->
+    <section id="metrics" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#2e7d32">📊</div>
+        <h2 class="text-lg font-semibold">Software Quality Metrics (Formulas)</h2>
+        <span class="chip chip-green ml-auto">Ch.10</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-sm font-medium mb-2">Variables</p>
+          <table class="compare-table text-xs">
+            <tbody>
+              <tr><td class="font-mono font-bold">NYSerH</td><td>Number of hours the software system is in service during one year</td></tr>
+              <tr><td class="font-mono font-bold">NYFH</td><td>Number of hours where at least one function is unavailable (failed)</td></tr>
+              <tr><td class="font-mono font-bold">NYVitFH</td><td>Number of hours where at least one vital (critical) function is unavailable</td></tr>
+              <tr><td class="font-mono font-bold">NYTFH</td><td>Number of hours of total failure (the whole system crashed)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p class="text-sm font-medium mb-2">Corrective Maintenance Formulas</p>
+          <div class="space-y-2">
+            <div class="formula-box">FA = (NYSerH − NYFH) / NYSerH<br><span class="text-gray-500">Full Availability</span></div>
+            <div class="formula-box">VitA = (NYSerH − NYVitFH) / NYSerH<br><span class="text-gray-500">Vital Availability</span></div>
+            <div class="formula-box">TUA = NYTFH / NYSerH<br><span class="text-gray-500">Total Unavailability</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="text-sm font-medium mb-2">Software Process Productivity Metrics</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+        <div class="formula-box text-xs">DevP = TotalWorkingHours / KLOC<br><span class="text-gray-500">Development Productivity</span></div>
+        <div class="formula-box text-xs">CRe = ReusedKLOC / KLOC<br><span class="text-gray-500">Code Reuse</span></div>
+        <div class="formula-box text-xs">DocRe = ReusedPages / TotalPages<br><span class="text-gray-500">Documentation Reuse</span></div>
+      </div>
+      <p class="text-sm font-medium mb-2">Core Quality Metrics</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div class="formula-box text-xs">NCE = Sum of all detected code errors<br><span class="text-gray-500">Total Number of Code Errors</span></div>
+        <div class="formula-box text-xs">WCE = NCE × relative weight<br><span class="text-gray-500">Weighted NCE</span></div>
+        <div class="formula-box text-xs">CED = NCE / KLOC<br><span class="text-gray-500">Code Error Density</span></div>
+        <div class="formula-box text-xs">WCED = WCE / KLOC<br><span class="text-gray-500">Weighted Code Error Density</span></div>
+        <div class="formula-box text-xs">ASCE = WCE / NCE<br><span class="text-gray-500">Average Severity of Code Errors</span></div>
+      </div>
+    </section>
+
+    <!-- STANDARDS -->
+    <section id="standards" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#1565c0">S</div>
+        <h2 class="text-lg font-semibold">Quality Management Standards vs Project Process Standards</h2>
+        <span class="chip chip-blue ml-auto">Ch.10</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="compare-table">
+          <thead>
+            <tr><th>Feature / Aspect</th><th>🏢 Quality Management Standards<br>"What"</th><th>⚙️ Project Process Standards<br>"How"</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-medium text-xs">Core Question</td><td>What process needs to be performed?</td><td>How is the process to be performed?</td></tr>
+            <tr><td class="font-medium text-xs">Definition</td><td>Defines what process should exist to manage software quality</td><td>Defines how the software project process should be performed</td></tr>
+            <tr><td class="font-medium text-xs">Primary Focus</td><td>The organization's overall SQA system, infrastructure, policies, and quality requirements</td><td>Specific software development and maintenance methodologies</td></tr>
+            <tr><td class="font-medium text-xs">Level of Application</td><td>Organizational Level (applies to the whole company)</td><td>Project Level (applies to daily tasks of the development team)</td></tr>
+            <tr><td class="font-medium text-xs">Flexibility</td><td>Less specific — allows the organization to choose its own methods and tools; dictates requirements, not methods</td><td>More specific — defines exact steps, documents, reviews, and testing activities; highly rigid</td></tr>
+            <tr><td class="font-medium text-xs">Main Goal</td><td>Achieve organizational certification and assure clients of consistent quality capabilities</td><td>Ensure individual projects are built correctly, safely, and uniformly; team follows systematic controlled process</td></tr>
+            <tr><td class="font-medium text-xs">What it controls</td><td>SQA framework, quality policy, quality management system, audit, certification, and improvement</td><td>Project activities: requirements, design, coding, review, testing, maintenance, documentation</td></tr>
+            <tr><td class="font-medium text-xs">Examples of activities</td><td>Setting quality objectives, conducting audits, process assessment, certification, continuous improvement</td><td>Preparing design documents, performing software reviews, verification and validation, testing, maintenance procedures</td></tr>
+            <tr><td class="font-medium text-xs">Examples</td><td>ISO 9000-3 (Certification), CMM (Assessment)</td><td>IEEE Std 1012, ISO/IEC 12207, CMMI</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BENEFITS OF SQA STANDARDS -->
+    <section id="sqa-benefits" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#00695c">✓</div>
+        <h2 class="text-lg font-semibold">Benefits of Applying SQA Standards</h2>
+        <span class="chip chip-teal ml-auto">Ch.10</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#e6f4ea">
+          <div class="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">1</div>
+          <div>
+            <p class="text-xs font-semibold text-green-800">Highest Professional Level</p>
+            <p class="text-xs text-gray-600 mt-0.5">Ability to apply software development and maintenance methodologies at the highest professional level.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#e8f0fe">
+          <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">2</div>
+          <div>
+            <p class="text-xs font-semibold text-blue-800">Better Coordination</p>
+            <p class="text-xs text-gray-600 mt-0.5">Improves mutual understanding and coordination between development teams, especially between development and maintenance teams.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#fef7e0">
+          <div class="w-6 h-6 rounded-full bg-yellow-600 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">3</div>
+          <div>
+            <p class="text-xs font-semibold text-yellow-800">External Cooperation</p>
+            <p class="text-xs text-gray-600 mt-0.5">Fosters greater cooperation between software developers and external participants in the project.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#fce8e6">
+          <div class="w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">4</div>
+          <div>
+            <p class="text-xs font-semibold text-red-800">Supplier/Customer Alignment</p>
+            <p class="text-xs text-gray-600 mt-0.5">Creates better understanding between suppliers and customers based on known development and maintenance standards placed in the contract.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#f3e8fd">
+          <div class="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">5</div>
+          <div>
+            <p class="text-xs font-semibold text-purple-800">Enhanced Stakeholder Confidence</p>
+            <p class="text-xs text-gray-600 mt-0.5">Enhances the project's credibility, compliance, and acceptance.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#e6f4ea">
+          <div class="w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">6</div>
+          <div>
+            <p class="text-xs font-semibold text-green-800">Improved Product Quality</p>
+            <p class="text-xs text-gray-600 mt-0.5">Reduces defects in the final product and ensures it meets user expectations and industry benchmarks.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#e8f0fe">
+          <div class="w-6 h-6 rounded-full bg-blue-700 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">7</div>
+          <div>
+            <p class="text-xs font-semibold text-blue-800">Better Process Control & Consistency</p>
+            <p class="text-xs text-gray-600 mt-0.5">Reduces rework and increases efficiency across teams by minimizing process variation.</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-3 rounded-lg" style="background:#fef7e0">
+          <div class="w-6 h-6 rounded-full bg-yellow-700 text-white flex items-center justify-center text-xs flex-shrink-0 mt-0.5">8</div>
+          <div>
+            <p class="text-xs font-semibold text-yellow-800">Early Detection & Prevention</p>
+            <p class="text-xs text-gray-600 mt-0.5">Reduces the cost and effort of fixing issues by identifying defects early instead of dealing with late-stage failures.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CH11: TQM -->
+    <section id="tqm" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#6a1b9a">11</div>
+        <h2 class="text-lg font-semibold">Total Quality Management (TQM) Principles</h2>
+        <span class="chip chip-purple ml-auto">Ch.11</span>
+      </div>
+      <div class="mb-3"><span class="mnemonic">CE PI SC FC</span></div>
+      <div class="mb-4">
+        <p class="text-sm font-medium mb-2">TQM Implementation Steps</p>
+        <ol class="text-xs text-gray-600 space-y-1 ml-3 list-decimal list-inside">
+          <li>Top management learns about and decides to commit to TQM — identify it as organizational strategy</li>
+          <li>Organization assesses its current culture, customer satisfaction, and quality management systems</li>
+          <li>Top management identifies and communicates core values and principles</li>
+          <li>TQM master plan is developed based on the initial assessments</li>
+          <li>Management forms teams for process improvement efforts and maps critical processes</li>
+        </ol>
+      </div>
+      <p class="text-sm font-medium mb-3">8 TQM Principles</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#1a73e8; background:#f8f9fa">
+          <p class="text-xs font-bold text-blue-700">1. Customer-focused (C)</p>
+          <p class="text-xs text-gray-600 mt-1">The customer ultimately determines the level of quality. No matter how much an organization invests in training, design, or new tools, the effort is only worthwhile if the customer finds value in the final product or service.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#ea4335; background:#f8f9fa">
+          <p class="text-xs font-bold text-red-700">2. Total Employee Involvement (E)</p>
+          <p class="text-xs text-gray-600 mt-1">All employees must participate in working toward common goals. Management is responsible for providing a proper, empowering environment that removes fear from the workplace.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#fbbc04; background:#f8f9fa">
+          <p class="text-xs font-bold text-yellow-700">3. Process-centered (P)</p>
+          <p class="text-xs text-gray-600 mt-1">Focuses heavily on "process thinking." A process is a series of steps that transform inputs from suppliers into outputs for customers. Performance must be continuously monitored to detect unexpected variations.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#34a853; background:#f8f9fa">
+          <p class="text-xs font-bold text-green-700">4. Integrated System (I)</p>
+          <p class="text-xs text-gray-600 mt-1">Focuses on horizontal processes that interconnect different vertical functional departments. Everyone must clearly understand the organization's vision, mission, and quality policies.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#9334e6; background:#f8f9fa">
+          <p class="text-xs font-bold text-purple-700">5. Strategic and Systematic Approach (S)</p>
+          <p class="text-xs text-gray-600 mt-1">Quality cannot be an afterthought; it must be managed. Involves formulating a strategic plan that integrates quality as a core, foundational component of the organization's overarching goals.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#0097a7; background:#f8f9fa">
+          <p class="text-xs font-bold text-teal-700">6. Continual Improvement (C)</p>
+          <p class="text-xs text-gray-600 mt-1">A major thrust of TQM. Drives an organization to constantly be analytical and creative in finding new ways to become more competitive, effective, and efficient.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#e8710a; background:#f8f9fa">
+          <p class="text-xs font-bold text-orange-700">7. Fact-based Decision Making (F)</p>
+          <p class="text-xs text-gray-600 mt-1">Decisions should never be based on guesses. Requires continuous collection and analysis of performance data and history to improve decision accuracy, achieve consensus, and make predictions.</p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4" style="border-color:#c62828; background:#f8f9fa">
+          <p class="text-xs font-bold text-red-800">8. Communications (C)</p>
+          <p class="text-xs text-gray-600 mt-1">Effective communication (involving strategy, method, and timeliness) is vital. It plays a massive role in maintaining high morale and motivating employees at all levels, especially during times of organizational change.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CMM & CMMI -->
+    <section id="cmm-cmmi" class="section-card p-6 mb-5">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style="background:#283593">C</div>
+        <h2 class="text-lg font-semibold">CMM vs CMMI</h2>
+        <span class="chip chip-purple ml-auto">Ch.11</span>
+      </div>
+      <div class="overflow-x-auto mb-4">
+        <table class="compare-table">
+          <thead>
+            <tr><th>Feature / Aspect</th><th>CMM</th><th>CMMI</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-medium text-xs">Purpose</td><td>To evaluate the process maturity levels in software</td><td>To combine many software models into one and to overcome the drawbacks of CMM</td></tr>
+            <tr><td class="font-medium text-xs">Scope</td><td>Describes specifically about software engineering</td><td>Describes integrated processes and disciplines — applies to software AND system engineering, hardware, and services across all industries</td></tr>
+            <tr><td class="font-medium text-xs">Process Units</td><td>18 Key Process Areas (KPAs) — does not specify a particular way of achieving goals</td><td>25 Process Areas (PAs) — each PA has objectives, specific practices and procedures defined</td></tr>
+            <tr><td class="font-medium text-xs">Level 4 Name</td><td>"Managed"</td><td>"Quantitatively Managed" (renamed)</td></tr>
+            <tr><td class="font-medium text-xs">Focus on Data</td><td>Primarily management-related activities</td><td>Stronger emphasis on statistical and quantitative data to control processes</td></tr>
+            <tr><td class="font-medium text-xs">Specificity</td><td>Lacks specificity; does not specify a particular way of achieving goals, requires flexible thinking</td><td>Provides greater clarity by defining specific practices and procedures for each Process Area</td></tr>
+            <tr><td class="font-medium text-xs">Goal Orientation</td><td>Prone to "Goal Displacement" — treating maturity levels as a mere target to hit</td><td>Overcomes this by focusing heavily on actual, measurable process improvement</td></tr>
+            <tr><td class="font-medium text-xs">Applicability</td><td>Only helpful if put into place early in the software development process</td><td>Helpful no matter which stage of software development process</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-sm font-medium mb-3">CMM Maturity Levels</p>
+      <div class="space-y-3">
+        <div class="rounded-lg p-3 border-l-4 cmm-1 bg-gray-50">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="chip chip-red text-xs">Level 1</span>
+            <p class="text-sm font-bold">Initial</p>
+          </div>
+          <p class="text-xs text-gray-600">Processes are unpredictable, disorganized, and ad hoc. Success depends on individual heroics rather than defined processes. No KPAs required.</p>
+          <p class="text-xs text-gray-500 mt-1"><em>Example: Programmers code the ERP system directly without any formal requirement documents or testing plans.</em></p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 cmm-2 bg-gray-50">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="chip chip-yellow text-xs">Level 2</span>
+            <p class="text-sm font-bold">Repeatable</p>
+          </div>
+          <p class="text-xs text-gray-600">Basic project management techniques established. Successful processes are documented so they can be repeated on similar projects.</p>
+          <p class="text-xs text-gray-500 mt-1"><strong>KPAs:</strong> Requirements Management, Software Project Planning, SQA, Configuration Management.</p>
+          <p class="text-xs text-gray-500"><em>Example: Team uses a tool like Jira to track basic bugs and schedules.</em></p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 cmm-3 bg-gray-50">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="chip chip-green text-xs">Level 3</span>
+            <p class="text-sm font-bold">Defined</p>
+          </div>
+          <p class="text-xs text-gray-600">Organization develops its own standard software development methodology. Processes are standardized and integrated across the organization.</p>
+          <p class="text-xs text-gray-500 mt-1"><strong>KPAs:</strong> Peer Reviews, Inter-group Coordination, Training Program, Organization Process Definition.</p>
+          <p class="text-xs text-gray-500"><em>Example: Every team follows the exact same formal SDLC manual, using standardized templates.</em></p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 cmm-4 bg-gray-50">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="chip chip-blue text-xs">Level 4</span>
+            <p class="text-sm font-bold">Managed (CMM) / Quantitatively Managed (CMMI)</p>
+          </div>
+          <p class="text-xs text-gray-600">Organization monitors and controls its processes through quantitative data collection and analysis.</p>
+          <p class="text-xs text-gray-500 mt-1"><strong>KPAs:</strong> Quantitative Process Management, Software Quality Management.</p>
+          <p class="text-xs text-gray-500"><em>Example: Management tracks precise defect density metrics (e.g., 2 bugs per 1000 lines of code) to predict system reliability.</em></p>
+        </div>
+        <div class="rounded-lg p-3 border-l-4 cmm-5 bg-gray-50">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="chip chip-purple text-xs">Level 5</span>
+            <p class="text-sm font-bold">Optimizing</p>
+          </div>
+          <p class="text-xs text-gray-600">Focus is on continuous process improvement. Innovative functionality and feedback loops are used to prevent defects and improve processes.</p>
+          <p class="text-xs text-gray-500 mt-1"><strong>KPAs:</strong> Defect Prevention, Technology Change Management, Process Change Management.</p>
+          <p class="text-xs text-gray-500"><em>Example: Organization analyzes historical defect data and implements an AI-driven automated testing tool to permanently prevent specific types of defects.</em></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="text-center py-6 text-xs text-gray-400">
+      BMSE2103 Software Quality Assurance &amp; Testing — Summary Notes
+    </div>
+
+  </main>
+</div>
+
+<!-- Scroll to top -->
+<div id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+</div>
+
+<script>
+  // Mobile menu toggle
+  const menuBtn = document.getElementById('menuBtn');
+  const sidebar = document.getElementById('sidebar');
+  menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+  document.getElementById('main-content').addEventListener('click', () => sidebar.classList.remove('open'));
+
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.body.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / docHeight) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+    document.getElementById('scrollTop').classList.toggle('visible', scrollTop > 300);
+  });
+
+  // Active nav link
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + entry.target.id) link.classList.add('active');
+        });
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-64px 0px -50% 0px' });
+  sections.forEach(s => observer.observe(s));
+
+  // Search
+  document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.highlight').forEach(el => {
+      el.outerHTML = el.innerHTML;
+    });
+    if (!q) return;
+    const content = document.getElementById('main-content');
+    const walk = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walk.nextNode()) nodes.push(walk.currentNode);
+    nodes.forEach(node => {
+      if (!node.textContent.toLowerCase().includes(q)) return;
+      if (node.parentElement.classList.contains('highlight')) return;
+      const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+      const span = document.createElement('span');
+      span.innerHTML = node.textContent.replace(regex, '<span class="highlight">$1</span>');
+      node.parentNode.replaceChild(span, node);
+    });
+  });
+</script>
+</body>
+</html>
